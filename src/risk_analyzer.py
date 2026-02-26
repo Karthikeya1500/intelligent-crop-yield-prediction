@@ -1,6 +1,7 @@
 """
 risk_analyzer.py
 Rule-based agricultural risk analyzer.
+Evaluates rainfall, temperature, pesticide use, and yield against benchmarks.
 """
 
 from typing import Any
@@ -25,6 +26,22 @@ TEMP_THRESHOLDS = {
 PESTICIDE_HIGH_THRESHOLD = 50_000
 PESTICIDE_LOW_THRESHOLD  = 10
 
+# FAO global average yields by crop (hg/ha)
+CROP_YIELD_BENCHMARKS: dict[str, float] = {
+    "Wheat":        32_000,
+    "Rice, paddy":  46_000,
+    "Maize":        55_000,
+    "Potatoes":    202_000,
+    "Soybeans":     27_000,
+    "Cassava":     126_000,
+    "Sugar cane":  700_000,
+    "Sorghum":      15_000,
+    "Barley":       29_000,
+    "Groundnuts":   17_000,
+    "Sunflower seed": 16_000,
+    "Sweet potatoes": 97_000,
+}
+
 
 def analyze_risks(
     crop: str,
@@ -39,7 +56,7 @@ def analyze_risks(
     """Identify agricultural risk factors from input parameters."""
     risks: list = []
 
-    # Rainfall / water availability
+    # Rainfall
     if rainfall < RAINFALL_THRESHOLDS["very_low"]:
         risks.append({
             "factor": "Severe Drought Stress",
@@ -55,7 +72,7 @@ def analyze_risks(
             "severity": "Medium",
             "description": (
                 f"Rainfall of {rainfall:.0f} mm/year is below the 500 mm threshold. "
-                "Supplemental irrigation is recommended at critical growth stages."
+                "Supplemental irrigation is recommended."
             ),
         })
     elif rainfall > RAINFALL_THRESHOLDS["very_high"]:
@@ -64,8 +81,7 @@ def analyze_risks(
             "severity": "High",
             "description": (
                 f"Rainfall of {rainfall:.0f} mm/year is extremely high. "
-                "Waterlogging can damage roots and spread fungal diseases. "
-                "Proper field drainage is critical."
+                "Waterlogging can damage roots. Proper drainage is critical."
             ),
         })
     elif rainfall > RAINFALL_THRESHOLDS["high"]:
@@ -73,8 +89,66 @@ def analyze_risks(
             "factor": "Excess Moisture / Leaching",
             "severity": "Medium",
             "description": (
-                f"Rainfall of {rainfall:.0f} mm/year is above typical crop needs. "
-                "Nutrient leaching and disease pressure are likely."
+                f"Rainfall of {rainfall:.0f} mm/year is high. "
+                "Nutrient leaching and fungal disease pressure are likely."
+            ),
+        })
+
+    # Temperature
+    if temperature >= TEMP_THRESHOLDS["very_hot"]:
+        risks.append({
+            "factor": "Extreme Heat Stress",
+            "severity": "High",
+            "description": (
+                f"Average temperature of {temperature:.1f}°C is extremely high. "
+                "Photosynthesis and pollen viability are severely impaired above 38°C."
+            ),
+        })
+    elif temperature >= TEMP_THRESHOLDS["hot"]:
+        risks.append({
+            "factor": "Heat Stress Risk",
+            "severity": "Medium",
+            "description": (
+                f"Average temperature of {temperature:.1f}°C approaches the heat-stress "
+                "threshold. Yield losses of 5-15% are common."
+            ),
+        })
+    elif temperature <= TEMP_THRESHOLDS["very_cold"]:
+        risks.append({
+            "factor": "Frost / Chilling Injury Risk",
+            "severity": "High",
+            "description": (
+                f"Average temperature of {temperature:.1f}°C is near or below freezing. "
+                "Most crops will fail. Use frost-tolerant varieties."
+            ),
+        })
+    elif temperature <= TEMP_THRESHOLDS["cold"]:
+        risks.append({
+            "factor": "Sub-Optimal Temperature",
+            "severity": "Low",
+            "description": (
+                f"Temperature of {temperature:.1f}°C is below the optimal range. "
+                "Slower growth and delayed maturity are expected."
+            ),
+        })
+
+    # Pesticides
+    if pesticides <= PESTICIDE_LOW_THRESHOLD:
+        risks.append({
+            "factor": "Pest / Disease Vulnerability",
+            "severity": "Medium",
+            "description": (
+                f"Very low pesticide use ({pesticides:.1f} tonnes). "
+                "Pest outbreaks could significantly reduce yield. Consider IPM practices."
+            ),
+        })
+    elif pesticides > PESTICIDE_HIGH_THRESHOLD:
+        risks.append({
+            "factor": "Excessive Pesticide Use",
+            "severity": "Medium",
+            "description": (
+                f"Pesticide use of {pesticides:,.0f} tonnes is very high. "
+                "Risk of resistance development and soil microbiome disruption."
             ),
         })
 
