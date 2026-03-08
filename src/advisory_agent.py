@@ -1,7 +1,6 @@
 """
 advisory_agent.py
 Agentic AI Farm Advisory System — Milestone 2.
-Implements: Knowledge Retrieval -> Prompt Building -> LLM Generation -> Validation.
 """
 
 from __future__ import annotations
@@ -11,38 +10,37 @@ from typing import Any
 
 AGRONOMY_KB: dict[str, str] = {
     "irrigation": (
-        "FAO recommends deficit irrigation strategies when water is scarce. "
-        "Drip irrigation can improve water-use efficiency by 30-50%. "
-        "Critical stages: germination, flowering, and grain-filling."
+        "FAO recommends deficit irrigation when water is scarce. "
+        "Drip irrigation improves efficiency by 30-50%. "
+        "Key stages: germination, flowering, grain-filling."
     ),
     "fertilizer": (
-        "ICAR recommends soil-test-based fertilizer application. "
-        "Balanced NPK is essential. Split N application reduces losses. "
+        "ICAR recommends soil-test-based NPK. Split N reduces losses. "
         "Organic compost improves long-term soil health."
     ),
     "pest_management": (
-        "IPM combines biological controls, resistant varieties, cultural practices, "
-        "and judicious pesticide use. Use economic thresholds to guide decisions."
+        "IPM: biological controls + resistant varieties + cultural practices + targeted pesticides. "
+        "Apply only when economic thresholds are exceeded."
     ),
     "heat_stress": (
-        "Heat stress above 35 degrees reduces photosynthesis and pollen viability. "
-        "Irrigate during peak heat, use mulch, select heat-tolerant varieties."
+        "Heat stress above 35C reduces photosynthesis and pollen viability. "
+        "Irrigate during peak heat. Select heat-tolerant varieties."
     ),
     "drought_management": (
         "Drought-tolerant varieties maintain 70-80% yield under moisture stress. "
-        "Conservation agriculture increases soil water retention."
+        "Conservation agriculture improves soil water retention."
     ),
     "soil_health": (
-        "Healthy soil organic carbon supports water retention and nutrient cycling. "
-        "Crop rotation and cover cropping improve soil health long-term."
+        "Soil organic carbon above 1.5% supports water retention and nutrient cycling. "
+        "Crop rotation and cover cropping help."
     ),
     "variety_selection": (
-        "Selecting a high-yielding variety adapted to the local agro-climatic zone "
-        "is one of the highest-impact decisions. Use certified seeds."
+        "High-yielding varieties adapted to the local agro-climatic zone "
+        "can improve yields by 15-25%. Use certified seeds."
     ),
     "seasonal_planning": (
-        "Sowing at the recommended phenological window maximises yield potential. "
-        "Use FAO GIEWS crop calendars for guidance."
+        "Sowing at the correct phenological window maximises yield potential. "
+        "Use FAO GIEWS crop calendars."
     ),
 }
 
@@ -59,9 +57,8 @@ REQUIRED_SECTIONS = [
 def _retrieve_knowledge(rainfall, temperature, pesticides, risks):
     selected, used = [], set()
     selected.append(f"[Variety Selection] {AGRONOMY_KB['variety_selection']}")
-    used.add("variety_selection")
     selected.append(f"[Seasonal Planning] {AGRONOMY_KB['seasonal_planning']}")
-    used.add("seasonal_planning")
+    used.update(["variety_selection", "seasonal_planning"])
     if rainfall < 500:
         selected.append(f"[Drought] {AGRONOMY_KB['drought_management']}")
         selected.append(f"[Irrigation] {AGRONOMY_KB['irrigation']}")
@@ -87,42 +84,56 @@ def _retrieve_knowledge(rainfall, temperature, pesticides, risks):
 def _build_prompt(crop, area, year, rainfall, temperature, pesticides,
                   predicted_yield, yield_category, yield_explanation,
                   feature_importance_text, risks_text, knowledge_context):
-    """Build structured prompt for the LLM."""
-    prompt = (
-        "You are an expert agricultural advisor AI trained on FAO and ICAR best practices.
+    return (
+        "You are an expert agricultural advisor AI (FAO/ICAR guidelines).
 
 "
-        "Analyze the farm data below and generate a structured advisory report.
-
+        f"Crop: {crop}  Location: {area}  Year: {year}
 "
-        f"Crop: {crop}  |  Location: {area}  |  Year: {year}
-"
-        f"Rainfall: {rainfall:.1f} mm/year  |  Temperature: {temperature:.1f} C  "
-        f"|  Pesticides: {pesticides:,.1f} tonnes
+        f"Rainfall: {rainfall:.1f} mm/yr  Temp: {temperature:.1f}C  "
+        f"Pesticides: {pesticides:,.1f} t
 "
         f"Predicted Yield: {predicted_yield:,.0f} hg/ha ({yield_category})
-"
-        f"Reason: {yield_explanation}
 
 "
         f"Feature Importance:
 {feature_importance_text}
 
 "
-        f"Risk Factors:
+        f"Risks:
 {risks_text}
 
 "
-        f"Agronomy Knowledge:
+        f"Agronomy Context:
 {knowledge_context}
 
 "
-        "Generate a report with these exact sections:
+        "Write a report with these exact sections:
 "
         + "
 ".join(REQUIRED_SECTIONS)
-        + "
-
-Be specific, practical, and based on the data provided."
     )
-    return prompt
+
+
+def _generate_with_gemini(api_key: str, prompt: str) -> str:
+    """Call Google Gemini free-tier API and return the response text."""
+    try:
+        import google.generativeai as genai  # type: ignore
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            generation_config={"temperature": 0.4, "top_p": 0.9, "max_output_tokens": 2048},
+            safety_settings=[
+                {"category": "HARM_CATEGORY_HARASSMENT",        "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH",       "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ],
+        )
+        return model.generate_content(prompt).text
+    except Exception as exc:
+        raise RuntimeError(f"Gemini API error: {exc}") from exc
+
+
+def _validate_output(text: str) -> bool:
+    return all(s.lower() in text.lower() for s in REQUIRED_SECTIONS)
