@@ -82,7 +82,7 @@ except FileNotFoundError:
 st.sidebar.markdown("## Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["Predict Yield", "Data Explorer", "Model Performance"],
+    ["Predict Yield", "Farm Advisory", "Data Explorer", "Model Performance"],
     label_visibility="collapsed",
 )
 st.sidebar.divider()
@@ -176,6 +176,15 @@ if page == "Predict Yield":
 
 
 # PAGE 2: DATA EXPLORER
+elif page == "Farm Advisory":
+    st.markdown('<p class="main-header">Farm Advisory System</p>', unsafe_allow_html=True)
+    st.markdown(
+        '<p class="sub-header">AI-powered crop management recommendations</p>',
+        unsafe_allow_html=True,
+    )
+    st.divider()
+    st.info("The agentic advisory engine is under development. Check back soon.")
+
 elif page == "Data Explorer":
     st.markdown('<p class="main-header">Data Explorer</p>', unsafe_allow_html=True)
     st.markdown(
