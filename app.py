@@ -82,7 +82,7 @@ except FileNotFoundError:
 st.sidebar.markdown("## Navigation")
 page = st.sidebar.radio(
     "Go to",
-    ["Predict Yield", "Farm Advisory", "Data Explorer", "Model Performance"],
+    ["Predict Yield", "Data Explorer", "Model Performance"],
     label_visibility="collapsed",
 )
 st.sidebar.divider()
@@ -176,37 +176,6 @@ if page == "Predict Yield":
 
 
 # PAGE 2: DATA EXPLORER
-elif page == "Farm Advisory":
-    st.markdown('<p class="main-header">Farm Advisory System</p>', unsafe_allow_html=True)
-    st.markdown(
-        '<p class="sub-header">AI-powered crop management recommendations</p>',
-        unsafe_allow_html=True,
-    )
-    st.divider()
-    if not model_loaded:
-        st.error("Model artifacts not found. Run train_model.py first.")
-        st.stop()
-    with st.expander("Farm Input Parameters", expanded=True):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Crop & Region")
-            crop_options = list(label_encoders["Item"].classes_)
-            adv_crop = st.selectbox("Crop Type", crop_options, index=0, key="adv_crop")
-            area_options = list(label_encoders["Area"].classes_)
-            adv_area = st.selectbox("Country / Region", area_options, index=0, key="adv_area")
-            adv_year = st.number_input("Year", min_value=1960, max_value=2030,
-                                       value=2024, step=1, key="adv_year")
-        with col2:
-            st.subheader("Environmental Factors")
-            adv_rainfall = st.number_input("Average Rainfall (mm/year)", min_value=0.0,
-                                           max_value=5000.0, value=1000.0, step=10.0, key="adv_rain")
-            adv_pesticides = st.number_input("Pesticides Used (tonnes)", min_value=0.0,
-                                             max_value=500000.0, value=1000.0, step=100.0, key="adv_pest")
-            adv_temp = st.number_input("Average Temperature (C)", min_value=-10.0,
-                                       max_value=50.0, value=25.0, step=0.5, key="adv_temp")
-    if st.button("Generate Farm Advisory Report", use_container_width=True, key="btn_advisory"):
-        st.warning("Advisory engine not connected yet — coming in the next update.")
-
 elif page == "Data Explorer":
     st.markdown('<p class="main-header">Data Explorer</p>', unsafe_allow_html=True)
     st.markdown(
