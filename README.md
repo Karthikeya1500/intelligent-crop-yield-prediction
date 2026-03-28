@@ -150,3 +150,27 @@ Best model selected: **Random Forest** (n_estimators=20, max_depth=10)
 This project is developed for academic purposes.
 
 Dataset sourced from [FAO](http://www.fao.org/) and [World Data Bank](https://data.worldbank.org/).
+
+
+## Milestone 2 — Agentic Farm Advisory System
+
+The application now includes an AI-powered Farm Advisory module:
+
+- **Risk Analyzer**: Rule-based engine that detects agronomic risks from weather,
+  pesticide, and yield data using FAO/ICAR guidelines.
+- **Advisory Agent**: Multi-step agentic workflow:
+  1. ML model predicts yield
+  2. Risk analyzer identifies problems
+  3. Knowledge retrieval (agronomy guidelines)
+  4. Google Gemini LLM generates structured advisory report
+- **Export**: Download advisory report as Markdown or plain text.
+
+### Setup
+
+Add your Gemini API key to `.streamlit/secrets.toml`:
+
+```toml
+GEMINI_API_KEY = "your-key-here"
+```
+
+Get a free key at https://aistudio.google.com/app/apikey
