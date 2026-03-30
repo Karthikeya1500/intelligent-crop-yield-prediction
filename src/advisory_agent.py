@@ -282,6 +282,7 @@ def run_advisory_agent(
     api_key: str = "",
 ) -> dict[str, Any]:
     """Run the full agentic advisory workflow and return report + metadata."""
+    # Imports here to avoid circular dependency at module load time
     from src.risk_analyzer import (
         classify_yield,
         format_risks_for_prompt,
