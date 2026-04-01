@@ -122,7 +122,7 @@ def analyze_risks(
                     "High reliance on a single factor increases production risk.")})
 
     if not risks:
-        risks.append({"factor": "No Major Risks Detected", "severity": "Low",
+        risks.append({"factor": "No Significant Risks Detected", "severity": "Low",
             "description": "Input parameters are within acceptable agronomic ranges for this crop."})
 
     return risks
