@@ -65,7 +65,7 @@ AGRONOMY_KB: dict[str, str] = {
 }
 
 REQUIRED_SECTIONS = [
-    "### 1. Crop and Field Summary",
+    "### 1. Crop and Field Summary"  # must start at column 0 for markdown rendering,
     "### 2. Yield Prediction Interpretation",
     "### 3. Identified Risk Factors",
     "### 4. Recommended Farming Actions",
@@ -235,7 +235,7 @@ def _fallback_template(crop, area, year, rainfall, temperature, pesticides,
 ".join(f"- Action {i+1}: {a}" for i, a in enumerate(actions))
 
     lines = [
-        "### 1. Crop and Field Summary",
+        "### 1. Crop and Field Summary"  # must start at column 0 for markdown rendering,
         f"- **Crop:** {crop}",
         f"- **Location:** {area}",
         f"- **Year:** {year}",
