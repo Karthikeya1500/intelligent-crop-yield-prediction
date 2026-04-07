@@ -281,7 +281,15 @@ def run_advisory_agent(
     risks: list[dict[str, str]],
     api_key: str = "",
 ) -> dict[str, Any]:
-    """Run the full agentic advisory workflow and return report + metadata."""
+    """Run the full agentic advisory workflow and return report + metadata.
+
+    Steps:
+        1. Retrieve agronomy knowledge (RAG-style)
+        2. Build structured prompt
+        3. Generate with LLM (or fallback to rule-based template)
+        4. Validate output
+        5. Return report + metadata
+    """
     # Imports here to avoid circular dependency at module load time
     from src.risk_analyzer import (
         classify_yield,
