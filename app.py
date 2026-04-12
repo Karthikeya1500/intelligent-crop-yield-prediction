@@ -1,4 +1,6 @@
 """
+
+APP_VERSION = "2.0.0"  # Milestone 2 — Agentic Advisory
 app.py
 
 Streamlit web application for the Intelligent Crop Yield Prediction system.
