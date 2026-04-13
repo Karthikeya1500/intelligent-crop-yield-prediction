@@ -155,7 +155,7 @@ def classify_yield(crop: str, predicted_yield: float) -> tuple[str, str]:
             f"the global average for {crop} (~{benchmark:,} hg/ha).")
 
 
-def format_risks_for_prompt(risks: list[dict[str, str]]) -> str:
+def format_risks_for_prompt(risks: list[dict[str, str]]) -> str:  # noqa: E501
     if not risks:
         return "No significant risks identified."
     lines = []
@@ -165,7 +165,7 @@ def format_risks_for_prompt(risks: list[dict[str, str]]) -> str:
 ".join(lines)
 
 
-def format_feature_importance_for_prompt(feature_importance: dict[str, float]) -> str:
+def format_feature_importance_for_prompt(feature_importance: dict[str, float]) -> str:  # noqa: E501
     if not feature_importance:
         return "Feature importance data not available."
     sorted_fi = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
