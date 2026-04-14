@@ -15,9 +15,11 @@ Fallback: If no API key is provided, a rule-based template is used.
 """
 
 from __future__ import annotations
-import re
-import textwrap
 from typing import Any
+
+# ---------------------------------------------------------------------------
+# Agronomy Knowledge Base (static RAG-style context snippets)
+# ---------------------------------------------------------------------------
 
 AGRONOMY_KB: dict[str, str] = {
     "irrigation": (
@@ -55,7 +57,7 @@ AGRONOMY_KB: dict[str, str] = {
     "variety_selection": (
         "Selecting a high-yielding variety (HYV) adapted to the local agro-climatic zone "
         "is one of the highest-impact decisions. Use certified seeds from accredited sources. "
-        "CGIAR and national programs (ICAR, CIMMYT) provide location-specific variety recommendations."
+        "CGIAR and national programs (ICAR, CIMMYT) provide location-specific recommendations."
     ),
     "seasonal_planning": (
         "Sowing at the recommended phenological window maximises yield potential. "
@@ -65,7 +67,7 @@ AGRONOMY_KB: dict[str, str] = {
 }
 
 REQUIRED_SECTIONS = [
-    "### 1. Crop and Field Summary"  # must start at column 0 for markdown rendering,
+    "### 1. Crop and Field Summary",
     "### 2. Yield Prediction Interpretation",
     "### 3. Identified Risk Factors",
     "### 4. Recommended Farming Actions",
@@ -74,12 +76,17 @@ REQUIRED_SECTIONS = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Step 1: RAG-style Knowledge Retrieval
+# ---------------------------------------------------------------------------
+
 def _retrieve_knowledge(
     rainfall: float,
     temperature: float,
     pesticides: float,
     risks: list[dict[str, str]],
 ) -> str:
+    """Retrieve relevant agronomy snippets based on identified conditions."""
     selected: list[str] = []
     keys_used: set[str] = set()
 
@@ -115,55 +122,53 @@ def _retrieve_knowledge(
     if "irrigation" not in keys_used:
         selected.append(f"[Irrigation] {AGRONOMY_KB['irrigation']}")
 
-    return "
-
-".join(selected)
+    return "\n\n".join(selected)
 
 
-def _build_prompt(crop, area, year, rainfall, temperature, pesticides,
-                  predicted_yield, yield_category, yield_explanation,
-                  feature_importance_text, risks_text, knowledge_context):
+# ---------------------------------------------------------------------------
+# Step 2: Prompt Construction
+# ---------------------------------------------------------------------------
+
+def _build_prompt(
+    crop: str,
+    area: str,
+    year: int,
+    rainfall: float,
+    temperature: float,
+    pesticides: float,
+    predicted_yield: float,
+    yield_category: str,
+    yield_explanation: str,
+    feature_importance_text: str,
+    risks_text: str,
+    knowledge_context: str,
+) -> str:
+    """Build the full structured prompt for the LLM."""
     return (
         "You are an expert agricultural advisor AI trained on agronomy best practices "
-        "from FAO and ICAR.
-
-"
-        "Your task is to analyze farm data and generate a structured advisory report.
-
-"
-        f"Crop: {crop}  |  Location: {area}  |  Year: {year}
-"
+        "from FAO (Food and Agriculture Organization) and ICAR (Indian Council of Agricultural Research).\n\n"
+        "Your task is to analyze farm data, predicted crop yield, and risk factors, "
+        "and generate a structured, practical farm advisory report.\n\n"
+        f"Crop: {crop}  |  Location: {area}  |  Year: {year}\n"
         f"Rainfall: {rainfall:.1f} mm/year  |  Temperature: {temperature:.1f} C  "
-        f"|  Pesticides: {pesticides:,.1f} tonnes
-"
-        f"Predicted Yield: {predicted_yield:,.0f} hg/ha ({yield_category})
-"
-        f"Category basis: {yield_explanation}
-
-"
-        f"FEATURE IMPORTANCE:
-{feature_importance_text}
-
-"
-        f"RISK FACTORS:
-{risks_text}
-
-"
-        f"AGRONOMY KNOWLEDGE:
-{knowledge_context}
-
-"
-        "Generate report with these exact sections:
-"
-        + "
-".join(REQUIRED_SECTIONS)
-        + "
-
-Be specific, practical, actionable, and based on the data provided."
+        f"|  Pesticides: {pesticides:,.1f} tonnes\n"
+        f"Predicted Yield: {predicted_yield:,.0f} hg/ha ({yield_category})\n"
+        f"Category basis: {yield_explanation}\n\n"
+        f"FEATURE IMPORTANCE (Top factors):\n{feature_importance_text}\n\n"
+        f"RISK FACTORS IDENTIFIED:\n{risks_text}\n\n"
+        f"RETRIEVED AGRONOMY KNOWLEDGE:\n{knowledge_context}\n\n"
+        "Generate a report with these exact sections:\n"
+        + "\n".join(REQUIRED_SECTIONS)
+        + "\n\nBe specific, practical, actionable, and grounded in the data provided."
     )
 
 
+# ---------------------------------------------------------------------------
+# Step 3: LLM Generation
+# ---------------------------------------------------------------------------
+
 def _generate_with_gemini(api_key: str, prompt: str) -> str:
+    """Call Google Gemini API (free-tier gemini-1.5-flash) and return text."""
     try:
         import google.generativeai as genai  # type: ignore
         genai.configure(api_key=api_key)
@@ -183,17 +188,35 @@ def _generate_with_gemini(api_key: str, prompt: str) -> str:
 
 
 def _validate_output(text: str) -> bool:
+    """Check that the generated text contains all required sections."""
     return all(s.lower() in text.lower() for s in REQUIRED_SECTIONS)
 
 
-def _fallback_template(crop, area, year, rainfall, temperature, pesticides,
-                       predicted_yield, yield_category, yield_explanation,
-                       feature_importance_text, risks_text):
+# ---------------------------------------------------------------------------
+# Step 4: Fallback Template (rule-based, no API key needed)
+# ---------------------------------------------------------------------------
+
+def _fallback_template(
+    crop: str,
+    area: str,
+    year: int,
+    rainfall: float,
+    temperature: float,
+    pesticides: float,
+    predicted_yield: float,
+    yield_category: str,
+    yield_explanation: str,
+    feature_importance_text: str,
+    risks_text: str,
+) -> str:
+    """Generate a rule-based advisory report when no LLM API key is available."""
     actions = []
+
     if rainfall < 500:
         actions.append(
             "**Irrigation (Critical):** Install drip or sprinkler irrigation. "
-            "Schedule at critical growth stages. Target 30-50% water-use efficiency improvement."
+            "Schedule irrigations at critical growth stages. "
+            "Target 30-50% water-use efficiency improvement over flood irrigation."
         )
     elif rainfall > 2000:
         actions.append(
@@ -205,69 +228,90 @@ def _fallback_template(crop, area, year, rainfall, temperature, pesticides,
             "**Supplemental Irrigation:** Rainfall is moderate. Use supplemental irrigation "
             "during dry spells, particularly at critical growth stages."
         )
+
     actions.append(
         "**Fertilizer Management:** Conduct a soil test before the season. "
-        "Apply balanced NPK based on results. Split nitrogen 2-3 doses. "
-        "Incorporate organic compost to build soil organic matter."
+        "Apply balanced NPK based on results. Split nitrogen into 2-3 doses. "
+        "Incorporate organic compost to build long-term soil organic matter."
     )
+
     if pesticides < 50:
         actions.append(
-            "**Integrated Pest Management (IPM):** Low pesticide use — risk of pest outbreaks. "
+            "**Integrated Pest Management (IPM):** Very low pesticide use — risk of pest outbreaks. "
             "Implement IPM: pheromone traps, natural predators, crop rotation, "
-            "selective pesticides only when thresholds are exceeded."
+            "selective pesticides only when economic thresholds are exceeded."
         )
     else:
         actions.append(
             "**Responsible Pesticide Use:** Rotate chemical classes to prevent resistance. "
             "Adopt IPM to reduce dependency. Ensure operator safety (PPE)."
         )
+
     if temperature > 35:
         actions.append(
             "**Heat Stress Mitigation:** Apply foliar potassium during flowering. "
             "Irrigate in early morning or evening. Select heat-tolerant certified varieties."
         )
+
     actions.append(
-        "**Variety Selection:** Choose a certified High-Yielding Variety adapted to "
+        "**Variety Selection:** Choose a certified High-Yielding Variety (HYV) adapted to "
         f"the agro-climatic conditions of {area}. Consult state/national seed boards for "
         f"approved varieties of {crop}. Certified seeds typically yield 15-25% more."
     )
-    actions_text = "
-".join(f"- Action {i+1}: {a}" for i, a in enumerate(actions))
+
+    actions_text = "\n".join(f"- Action {i+1}: {a}" for i, a in enumerate(actions))
 
     lines = [
-        "### 1. Crop and Field Summary"  # must start at column 0 for markdown rendering,
+        "### 1. Crop and Field Summary",
         f"- **Crop:** {crop}",
         f"- **Location:** {area}",
         f"- **Year:** {year}",
-        f"- **Key conditions:** Rainfall {rainfall:.0f} mm/year, Temperature {temperature:.1f}°C, "
-        f"Pesticide use {pesticides:,.0f} tonnes. Predicted yield: {predicted_yield:,.0f} hg/ha.",
-        "", "---", "",
+        (f"- **Key conditions:** Rainfall {rainfall:.0f} mm/year, Temperature {temperature:.1f}°C, "
+         f"Pesticide use {pesticides:,.0f} tonnes. Predicted yield: {predicted_yield:,.0f} hg/ha."),
+        "",
+        "---",
+        "",
         "### 2. Yield Prediction Interpretation",
         f"- **Predicted yield category:** {yield_category}",
         f"- **Explanation:** {yield_explanation}",
-        "", "**Top yield-driving factors:**",
+        "",
+        "**Top yield-driving factors (model feature importance):**",
         feature_importance_text,
-        "", "---", "",
+        "",
+        "---",
+        "",
         "### 3. Identified Risk Factors",
         risks_text,
-        "", "---", "",
+        "",
+        "---",
+        "",
         "### 4. Recommended Farming Actions",
         actions_text,
-        "", "---", "",
+        "",
+        "---",
+        "",
         "### 5. Supporting Knowledge / Sources",
         "- **FAO:** Crop Water Requirements, Deficit Irrigation Strategies, IPM guidelines.",
         "- **ICAR:** Soil-test-based fertilizer recommendations, HYV seed programs.",
-        "- **CGIAR / CIMMYT:** Drought-tolerant variety programs, heat-stress adaptation.",
+        "- **CGIAR / CIMMYT:** Drought-tolerant variety programs, heat-stress adaptation strategies.",
         "- **WHO Pesticide Hazard Classification:** Safety guidelines for pesticide selection.",
-        "", "---", "",
+        "",
+        "---",
+        "",
         "### 6. Disclaimer",
-        "This is an AI-generated advisory report for informational purposes only. "
-        "Farmers should consult local agricultural extension officers before making decisions. "
-        "Yield predictions are indicative estimates only.",
+        (
+            "This is an AI-generated advisory report for informational and educational purposes only. "
+            "Farmers should consult local agricultural extension officers before making decisions. "
+            "Yield predictions are indicative estimates — actual yields depend on local soil conditions, "
+            "farm management, and market factors not captured in this model."
+        ),
     ]
-    return "
-".join(lines)
+    return "\n".join(lines)
 
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
 
 def run_advisory_agent(
     crop: str,
@@ -323,13 +367,9 @@ def run_advisory_agent(
         try:
             report_text = _generate_with_gemini(api_key, prompt)
             if not _validate_output(report_text):
-                retry = prompt + (
-                    "
-
-IMPORTANT: Your previous response was missing required sections. "
-                    "Include ALL six sections with exact headers:
-" + "
-".join(REQUIRED_SECTIONS)
+                retry = (
+                    prompt + "\n\nIMPORTANT: Your previous response was missing required sections. "
+                    "Include ALL six sections with exact headers:\n" + "\n".join(REQUIRED_SECTIONS)
                 )
                 report_text = _generate_with_gemini(api_key, retry)
             result["report"] = report_text

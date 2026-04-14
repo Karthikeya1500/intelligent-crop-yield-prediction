@@ -161,8 +161,7 @@ def format_risks_for_prompt(risks: list[dict[str, str]]) -> str:  # noqa: E501
     lines = []
     for r in risks:
         lines.append(f"[{r['severity']}] {r['factor']}: {r['description']}")
-    return "
-".join(lines)
+    return "\n".join(lines)
 
 
 def format_feature_importance_for_prompt(feature_importance: dict[str, float]) -> str:  # noqa: E501
@@ -173,5 +172,4 @@ def format_feature_importance_for_prompt(feature_importance: dict[str, float]) -
     for i, (feat, imp) in enumerate(sorted_fi[:5], 1):
         clean = feat.replace("_", " ").title()
         lines.append(f"  {i}. {clean}: {imp*100:.1f}%")
-    return "
-".join(lines)
+    return "\n".join(lines)
