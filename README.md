@@ -98,10 +98,10 @@ streamlit run app.py
                                            │
                      ┌─────────────────────v───────────────────────┐
                      │            Streamlit Web App                 │
-                     │  ┌──────────┐ ┌──────────┐ ┌─────────────┐ │
-                     │  │ Predict  │ │ Data     │ │ Model       │ │
-                     │  │ Yield    │ │ Explorer │ │ Performance │ │
-                     │  └──────────┘ └──────────┘ └─────────────┘ │
+                     │ ┌─────────┐ ┌─────────┐ ┌───────┐ ┌───────┐ │
+                     │ │ Predict │ │ Farm    │ │ Data  │ │ Model │ │
+                     │ │ Yield   │ │ Advisory│ │ Explor│ │ Perf. │ │
+                     │ └─────────┘ └─────────┘ └───────┘ └───────┘ │
                      └─────────────────────────────────────────────┘
 ```
 
@@ -142,6 +142,9 @@ Best model selected: **Random Forest** (n_estimators=20, max_depth=10)
 - **Scikit-Learn** — Machine learning models
 - **Matplotlib / Seaborn** — Data visualization
 - **Streamlit** — Web interface
+- **LangChain / LangGraph** — Agentic workflows
+- **Groq API / Llama-3** — LLM capabilities
+- **FPDF** — PDF generation
 
 ---
 
@@ -162,15 +165,15 @@ The application now includes an AI-powered Farm Advisory module:
   1. ML model predicts yield
   2. Risk analyzer identifies problems
   3. Knowledge retrieval (agronomy guidelines)
-  4. Google Gemini LLM generates structured advisory report
-- **Export**: Download advisory report as Markdown or plain text.
+  4. Groq Llama-3 LLM generates structured advisory report
+- **Export**: Download advisory report as PDF, Markdown, or plain text.
 
 ### Setup
 
-Add your Gemini API key to `.streamlit/secrets.toml`:
+Add your Groq API key to `.streamlit/secrets.toml`:
 
 ```toml
-GEMINI_API_KEY = "your-key-here"
+GROQ_API_KEY = "your-key-here"
 ```
 
-Get a free key at https://aistudio.google.com/app/apikey
+Get a free key at https://console.groq.com/keys

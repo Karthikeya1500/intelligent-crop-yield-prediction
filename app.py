@@ -317,4 +317,4 @@ elif page == 'Model Performance':
     else:
         st.info('Feature importance data not available.')
 st.divider()
-st.markdown('<center><small>Intelligent Crop Yield Prediction &amp; Agentic Farm Advisory System &nbsp;|&nbsp; Powered by scikit-learn &amp; Google Gemini</small></center>', unsafe_allow_html=True)
+st.markdown('<center><small>Intelligent Crop Yield Prediction &amp; Agentic Farm Advisory System &nbsp;|&nbsp; Powered by scikit-learn &amp; Groq Llama-3</small></center>', unsafe_allow_html=True)
