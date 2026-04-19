@@ -217,7 +217,7 @@ elif page == 'Farm Advisory':
                         pdf.multi_cell(0, 6, txt=line)
                     except Exception:
                         pdf.multi_cell(0, 6, txt='[Unrenderable formatting removed]')
-                pdf_bytes = bytes(pdf.output())
+                pdf_bytes = pdf.output(dest='S').encode('latin-1')
                 st.download_button(label='Download as PDF (.pdf)', data=pdf_bytes, file_name=f"farm_advisory_{adv_crop.replace(' ', '_')}_{adv_year}.pdf", mime='application/pdf', use_container_width=True, key='dl_pdf')
             except Exception as e:
                 st.error(f'PDF Generation Failed: {e}')
