@@ -1,5 +1,11 @@
 # Intelligent Crop Yield Prediction
 
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=Streamlit&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
+
+**Live Demo:** [Click here to use the Agentic Farm Advisory System](https://intelligent-crop-yield-prediction-irohnwchpirk3hdzn2gt7q.streamlit.app/)
+
 An AI-driven agricultural analytics system that predicts crop yield using historical farm, soil, and weather data. Built with **Scikit-Learn** for machine learning and **Streamlit** for the interactive web interface.
 
 ---
@@ -23,6 +29,9 @@ Agricultural yield depends on multiple factors including weather conditions, pes
 ```
 intelligent-crop-yield-prediction/
 │
+├── .streamlit/
+│   └── secrets.toml                # Groq API key and local secrets
+│
 ├── data/
 │   └── yield_df.csv                # Dataset (Kaggle)
 │
@@ -34,6 +43,8 @@ intelligent-crop-yield-prediction/
 │   └── metrics.json                # Evaluation metrics
 │
 ├── src/
+│   ├── advisory_agent.py           # LangChain/LangGraph agentic workflow
+│   ├── risk_analyzer.py            # Rule-based agronomic risk engine
 │   └── train_model.py              # Training and evaluation pipeline
 │
 ├── .gitignore
@@ -157,16 +168,15 @@ Dataset sourced from [FAO](http://www.fao.org/) and [World Data Bank](https://da
 
 ## Milestone 2 — Agentic Farm Advisory System
 
-The application now includes an AI-powered Farm Advisory module:
+The application now includes an AI-powered Farm Advisory module, integrating Large Language Models and rule-based insights:
 
-- **Risk Analyzer**: Rule-based engine that detects agronomic risks from weather,
-  pesticide, and yield data using FAO/ICAR guidelines.
-- **Advisory Agent**: Multi-step agentic workflow:
-  1. ML model predicts yield
-  2. Risk analyzer identifies problems
-  3. Knowledge retrieval (agronomy guidelines)
-  4. Groq Llama-3 LLM generates structured advisory report
-- **Export**: Download advisory report as PDF, Markdown, or plain text.
+- **Risk Analyzer**: Rule-based engine that detects agronomic risks from weather, pesticide, and yield data based on agricultural guidelines.
+- **Advisory Agent**: Multi-step agentic workflow using LangChain/LangGraph:
+  1. ML model predicts crop yield.
+  2. Risk analyzer identifies potential problems.
+  3. Knowledge retrieval pulls in targeted agronomy guidelines.
+  4. Groq Llama-3 LLM generates a comprehensive, structured advisory report.
+- **Export**: Seamlessly share insights by downloading the advisory report as a PDF, Markdown, or plain text directly from the Streamlit UI.
 
 ### Setup
 
