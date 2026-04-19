@@ -23,3 +23,6 @@ Thumbs.db
 
 # Model files (uncomment if models are too large for GitHub)
 # models/*.pkl
+
+# Secrets
+.streamlit/secrets.toml
